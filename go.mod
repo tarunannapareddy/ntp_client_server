@@ -1,4 +1,4 @@
-module Assignment3
+module ntp_client_server
 
 go 1.22
 

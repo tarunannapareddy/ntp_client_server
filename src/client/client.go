@@ -67,7 +67,7 @@ func (c *ntpClient) start() error {
 	delayPlot := plot.New()
 
 	// Set delay plot title and axis labels
-	delayPlot.Title.Text = "NTP Delay vs Iterations"
+	delayPlot.Title.Text = "NTP Delay vs Iterations from Local Server"
 	delayPlot.X.Label.Text = "Iteration"
 	delayPlot.Y.Label.Text = "Milliseconds"
 
@@ -75,7 +75,7 @@ func (c *ntpClient) start() error {
 	offsetPlot := plot.New()
 
 	// Set offset plot title and axis labels
-	offsetPlot.Title.Text = "NTP Offset vs Iterations"
+	offsetPlot.Title.Text = "NTP Offset vs Iterations from Local Server"
 	offsetPlot.X.Label.Text = "Iteration"
 	offsetPlot.Y.Label.Text = "Milliseconds"
 
@@ -102,7 +102,7 @@ func (c *ntpClient) start() error {
 
 		// Add delay and offset values to slices
 		c.Delays = append(c.Delays, totalDelay/float64(numBurstPackets))
-		c.Offsets = append(c.Offsets, float64(totalOffset / int64(numBurstPackets)))
+		c.Offsets = append(c.Offsets, float64(totalOffset/int64(numBurstPackets)))
 
 		// Sleep for 1 minute before the next burst
 		time.Sleep(1 * time.Minute)
@@ -124,7 +124,8 @@ func (c *ntpClient) start() error {
 	delayPlot.Add(line, points)
 
 	// Save delay plot to a file
-	if err := delayPlot.Save(6*vg.Inch, 4*vg.Inch, "ntp_delay.png"); err != nil {
+	fileName := fmt.Sprintf("ntp_delay_%s.png", time.Now().Format("2006-01-02_15-04-05"))
+	if err := delayPlot.Save(6*vg.Inch, 4*vg.Inch, fileName); err != nil {
 		return err
 	}
 
@@ -189,10 +190,10 @@ func (c *ntpClient) sendRequest() (float64, int64, error) {
 	// Calculate delay and offset
 
 	T4 := time.Now().Add(time.Duration(offset) * time.Millisecond).UTC() // Client receive time
-	T2 := toTime(responsePacket.RxTimeSec, responsePacket.RxTimeFrac)       // Server receive time
-	T3 := toTime(responsePacket.TxTimeSec, responsePacket.TxTimeFrac)       // Server transmit time
+	T2 := toTime(responsePacket.RxTimeSec, responsePacket.RxTimeFrac)    // Server receive time
+	T3 := toTime(responsePacket.TxTimeSec, responsePacket.TxTimeFrac)    // Server transmit time
 
-	delay := (T4.Sub(T1) - T3.Sub(T2)).Seconds() * 1000 // in milliseconds
+	delay := (T4.Sub(T1) - T3.Sub(T2)).Seconds() * 1000           // in milliseconds
 	newOffset := ((T2.Sub(T1) + T3.Sub(T4)).Seconds() / 2) * 1000 // in milliseconds
 	fmt.Printf("T1: %v T2: %v T3: %v T4: %v\n", T1, T2, T3, T4)
 	//fmt.Printf("Delay: %.2f ms\n", delay)
@@ -205,7 +206,6 @@ func getTimeInSeconds() uint32 {
 	now := time.Now()
 	return uint32(now.Unix())
 }
-
 
 func toTime(seconds uint32, fraction uint32) time.Time {
 	secs := int64(seconds) - 2208988800 // NTP epoch to Unix epoch
