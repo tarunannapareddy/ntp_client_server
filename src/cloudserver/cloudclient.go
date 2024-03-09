@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	ntpPort         = 123
+	ntpPort         = 8200
 	burstInterval   = 2 * time.Second
 	numBurstPackets = 8
 	timeoutDuration = 5 * time.Second
@@ -38,7 +38,7 @@ type packet struct {
 }
 
 func main() {
-	serverAddr := "us.pool.ntp.org"
+	serverAddr := "34.41.55.96"
 	client := &ntpClient{
 		serverAddr: serverAddr,
 	}
@@ -188,7 +188,8 @@ func (c *ntpClient) sendRequest() (float64, float64, error) {
 
 	delay := (T4.Sub(T1) - T3.Sub(T2)).Seconds() * 1000        // in milliseconds
 	offset := ((T2.Sub(T1) + T3.Sub(T4)).Seconds() / 2) * 1000 // in milliseconds
-	fmt.Printf("T1: %v T2: %v T3: %v T4: %v\n", T1, T2, T3, T4)
+	//fmt.Printf("T1: %v T2: %v T3: %v T4: %v\n", T1, T2, T3, T4)
+	fmt.Printf("T1: %v, T2: %v, T3: %v, T4: %v, Delay:%.2f ms, Offset: %.2f ms \n", T1, T2, T3, T4, delay, offset)
 	//fmt.Printf("Delay: %.2f ms\n", delay)
 	//fmt.Printf("Offset: %.2f ms\n", offset)
 

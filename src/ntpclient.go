@@ -38,7 +38,7 @@ type packet struct {
 }
 
 func main() {
-	serverAddr := "us.pool.ntp.org"
+	serverAddr := "pool.ntp.org"
 	client := &ntpClient{
 		serverAddr: serverAddr,
 	}
@@ -96,7 +96,7 @@ func (c *ntpClient) start() error {
 		c.Offsets = append(c.Offsets, totalOffset/float64(numBurstPackets))
 
 		// Sleep for 1 minute before the next burst
-		time.Sleep(30 * time.Second)
+		time.Sleep(4 * time.Minute)
 	}
 
 	// Plot delay values
