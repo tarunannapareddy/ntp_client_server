@@ -19,7 +19,7 @@ const (
 	burstInterval     = 2 * time.Second
 	minOffsetInterval = 256 * time.Second
 	maxOffsetInterval = 512 * time.Second
-	numBurstPackets   = 5
+	numBurstPackets   = 8
 	timeoutDuration   = 5 * time.Second
 )
 
@@ -80,12 +80,12 @@ func (c *ntpClient) start() error {
 	offsetPlot.Y.Label.Text = "Milliseconds"
 
 	// Calculate the total number of bursts for one hour
-	totalBursts := int((time.Hour).Minutes())
+	totalBursts := int((time.Hour).Minutes() / 4)
 
-	for burst := 0; burst < totalBursts/10; burst++ {
+	for burst := 0; burst < totalBursts; burst++ {
 		var totalOffset int64
 		var totalDelay float64
-
+		fmt.Printf("Burst no:%d\n", burst)
 		// Perform an eight-packet burst every 4 minutes
 		for i := 0; i < numBurstPackets; i++ {
 			delay, off, err := c.sendRequest()
@@ -105,7 +105,7 @@ func (c *ntpClient) start() error {
 		c.Offsets = append(c.Offsets, float64(totalOffset/int64(numBurstPackets)))
 
 		// Sleep for 1 minute before the next burst
-		time.Sleep(1 * time.Minute)
+		time.Sleep(4 * time.Minute)
 	}
 
 	// Plot delay values
@@ -145,7 +145,8 @@ func (c *ntpClient) start() error {
 	offsetPlot.Add(line, points)
 
 	// Save offset plot to a file
-	if err := offsetPlot.Save(6*vg.Inch, 4*vg.Inch, "ntp_offset.png"); err != nil {
+	fileName = fmt.Sprintf("ntp_offset_%s.png", time.Now().Format("2006-01-02_15-04-05"))
+	if err := offsetPlot.Save(6*vg.Inch, 4*vg.Inch, fileName); err != nil {
 		return err
 	}
 

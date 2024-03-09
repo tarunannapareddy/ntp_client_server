@@ -15,7 +15,7 @@ import (
 const (
 	ntpPort         = 123
 	burstInterval   = 2 * time.Second
-	numBurstPackets = 5
+	numBurstPackets = 8
 	timeoutDuration = 5 * time.Second
 )
 
@@ -74,12 +74,12 @@ func (c *ntpClient) start() error {
 	offsetPlot.Y.Label.Text = "Milliseconds"
 
 	// Calculate the total number of bursts for one hour
-	totalBursts := int((time.Hour).Minutes())
+	totalBursts := int((time.Hour).Minutes() / 4)
 
-	for burst := 0; burst < totalBursts/10; burst++ {
+	for burst := 0; burst < totalBursts; burst++ {
 		var totalDelay float64
 		var totalOffset float64
-
+		fmt.Printf("Burst no:%d\n", burst)
 		// Perform an eight-packet burst every 4 minutes
 		for i := 0; i < numBurstPackets; i++ {
 			delay, offset, err := c.sendRequest()
@@ -96,7 +96,7 @@ func (c *ntpClient) start() error {
 		c.Offsets = append(c.Offsets, totalOffset/float64(numBurstPackets))
 
 		// Sleep for 1 minute before the next burst
-		time.Sleep(1 * time.Minute)
+		time.Sleep(30 * time.Second)
 	}
 
 	// Plot delay values
@@ -115,7 +115,8 @@ func (c *ntpClient) start() error {
 	delayPlot.Add(line, points)
 
 	// Save delay plot to a file
-	if err := delayPlot.Save(6*vg.Inch, 4*vg.Inch, "ntp_delay.png"); err != nil {
+	fileName := fmt.Sprintf("ntp_delay_%s.png", time.Now().Format("2006-01-02_15-04-05"))
+	if err := delayPlot.Save(6*vg.Inch, 4*vg.Inch, fileName); err != nil {
 		return err
 	}
 
@@ -135,7 +136,8 @@ func (c *ntpClient) start() error {
 	offsetPlot.Add(line, points)
 
 	// Save offset plot to a file
-	if err := offsetPlot.Save(6*vg.Inch, 4*vg.Inch, "ntp_offset.png"); err != nil {
+	fileName = fmt.Sprintf("ntp_offset_%s.png", time.Now().Format("2006-01-02_15-04-05"))
+	if err := offsetPlot.Save(6*vg.Inch, 4*vg.Inch, fileName); err != nil {
 		return err
 	}
 
@@ -185,7 +187,7 @@ func (c *ntpClient) sendRequest() (float64, float64, error) {
 
 	delay := (T4.Sub(T1) - T3.Sub(T2)).Seconds() * 1000        // in milliseconds
 	offset := ((T2.Sub(T1) + T3.Sub(T4)).Seconds() / 2) * 1000 // in milliseconds
-	fmt.Printf("T1: %v T2: %v T3: %v T4: %v\n", T1, T2, T3, T4)
+	fmt.Printf("T1: %v, T2: %v, T3: %v, T4: %v, Delay:%.2f ms, Offset: %.2f ms \n", T1, T2, T3, T4, delay, offset)
 	//fmt.Printf("Delay: %.2f ms\n", delay)
 	//fmt.Printf("Offset: %.2f ms\n", offset)
 
